@@ -7,7 +7,6 @@ class Qilin::Manager
 
   CHILD_READY = []
   CHILD_PIPES = {}
-  SELF_PIPE = []
 
   # signal queue used for self-piping
   SIG_QUEUE = []
@@ -213,7 +212,6 @@ class Qilin::Manager
 
     # Fork the worker
     WORKERS[fork {
-      SELF_PIPE.replace([read_job, write_ready])
       worker_loop(worker)
     }] = worker
 
@@ -263,7 +261,7 @@ class Qilin::Manager
     alive = worker.tmp # tmp is our lifeline to the master process
 
     # closing anything we IO.select on will raise EBADF
-    trap(:USR1) { nr = -65536; SELF_PIPE[0].close rescue nil }
+    trap(:USR1) { nr = -65536; worker.job_pipe[0].close rescue nil }
     trap(:QUIT) { alive = nil; }
     [:TERM, :INT].each { |sig| trap(sig) { exit!(0) } } # instant shutdown
     logger.info "worker=#{worker.nr} ready"
@@ -284,10 +282,10 @@ class Qilin::Manager
       alive.chmod(m = 0 == m ? 1 : 0)
 
       # Signal to the manager we're ready for a job
-      SELF_PIPE[1].puts('.')
+      worker.ready_pipe[1].puts('.')
 
       # Read a job from the manager
-      job_payload = SELF_PIPE[0].gets.chomp
+      job_payload = worker.job_pipe[0].gets.chomp
 
       # timestamp
       alive.chmod(m = 0 == m ? 1 : 0)
@@ -337,7 +335,7 @@ class Qilin::Manager
       wpid, status = Process.waitpid2(-1, Process::WNOHANG)
       wpid or return
       worker = WORKERS.delete(wpid) and worker.tmp.close rescue nil
-      CHILD_READY.delete(worker.ready_pipe[0]) and worker.ready_pipe.map(&:close) and worker.job_pipe.map(&:close) rescue nil
+      CHILD_READY.delete(worker.ready_pipe[0]) and CHILD_PIPES.delete(worker.ready_pipe[0]) and worker.ready_pipe.map(&:close) and worker.job_pipe.map(&:close) rescue nil
       m = "reaped #{status.inspect} worker=#{worker.nr rescue 'unknown'}"
       status.success? ? logger.info(m) : logger.error(m)
     rescue Errno::ECHILD
