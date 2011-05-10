@@ -1,6 +1,6 @@
-worker_processes 3
+worker_processes 10
 working_directory File.join(File.dirname(__FILE__), '..')
-timeout 60
+timeout 8
 pid File.join(File.dirname(__FILE__), "qilin.pid")
 preload_app true
 
