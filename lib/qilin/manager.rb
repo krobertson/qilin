@@ -14,6 +14,9 @@ class Qilin::Manager
   # This hash maps PIDs to Workers
   WORKERS = {}
 
+  # list of signals we care about and trap in master.
+  QUEUE_SIGS = [ :WINCH, :QUIT, :INT, :TERM, :USR1, :HUP, :TTIN, :TTOU ]
+
   # general
   def logger=(obj)
     @logger = obj
@@ -72,6 +75,11 @@ class Qilin::Manager
 
   # Runs the thing.  Returns self so you can run join on it
   def start
+    # setup signal handlers before writing pid file in case people get
+    # trigger happy and send signals as soon as the pid file exists.
+    # Note that signals don't actually get handled until the #join method
+    QUEUE_SIGS.each { |sig| trap(sig) { SIG_QUEUE << sig } }
+
     self.pid = config[:pid]
     self.master_pid = $$
 
