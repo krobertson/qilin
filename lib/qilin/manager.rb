@@ -2,7 +2,7 @@ class Qilin::Manager
   attr_accessor :timeout, :worker_processes,
                 :before_fork, :after_fork,
                 :preload_app, :pull_job, :process_job,
-                :master_pid, :config, :user
+                :master_pid, :config, :user, :ready_pipe
   attr_reader :pid, :logger
 
   CHILD_READY = []
@@ -68,6 +68,7 @@ class Qilin::Manager
 
   def initialize(app, options = {})
     options = options.dup
+    self.ready_pipe = options.delete(:ready_pipe)
     options[:use_defaults] = true
     self.config = Qilin::Configurator.new(options)
     config.commit!(self, :skip => [:pid])
@@ -98,6 +99,13 @@ class Qilin::Manager
 
     proc_name 'master'
     logger.info "master process ready" # test_exec.rb relies on this message
+
+    if ready_pipe
+      ready_pipe.syswrite($$.to_s)
+      ready_pipe.close rescue nil
+      self.ready_pipe = nil
+    end
+
     begin
       reap_all_workers
       case SIG_QUEUE.shift
