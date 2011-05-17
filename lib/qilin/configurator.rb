@@ -116,6 +116,10 @@ class Qilin::Configurator
     set_hook(:process_job, block_given? ? block : args[0])
   end
 
+  def load_app(*args, &block)
+    set_hook(:load_app, block_given? ? block : args[0], -1)
+  end
+
   # sets the timeout of worker processes to +seconds+.  Workers
   # handling the request/app.call/response cycle taking longer than
   # this time period will be forcibly killed (via SIGKILL).  This

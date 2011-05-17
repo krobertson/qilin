@@ -1,6 +1,6 @@
 class Qilin::Manager
   attr_accessor :timeout, :worker_processes,
-                :before_fork, :after_fork,
+                :before_fork, :after_fork, :load_app,
                 :preload_app, :pull_job, :process_job,
                 :master_pid, :config, :user, :ready_pipe
   attr_reader :pid, :logger
@@ -66,7 +66,7 @@ class Qilin::Manager
       # don't unlink stale pid files, racy without non-portable locking...
   end
 
-  def initialize(app, options = {})
+  def initialize(options = {})
     options = options.dup
     self.ready_pipe = options.delete(:ready_pipe)
     options[:use_defaults] = true
@@ -251,7 +251,7 @@ class Qilin::Manager
     # TODO QUEUE_SIGS.each { |sig| trap(sig, nil) }
     trap(:CHLD, 'DEFAULT')
     SIG_QUEUE.clear
-    proc_name "worker[#{worker.nr}]"
+    proc_name "worker [#{worker.nr}]"
     WORKERS.values.each { |other| other.tmp.close rescue nil }
     WORKERS.clear
     worker.tmp.fcntl(Fcntl::F_SETFD, Fcntl::FD_CLOEXEC)
@@ -373,22 +373,15 @@ class Qilin::Manager
   end
 
   def build_app!
-    # TODO
-    #if app.respond_to?(:arity) && app.arity == 0
-    #  if defined?(Gem) && Gem.respond_to?(:refresh)
-    #    logger.info "Refreshing Gem list"
-    #    Gem.refresh
-    #  end
-    #  self.app = app.call
-    #end
+    return unless load_app
+
+    if defined?(Gem) && Gem.respond_to?(:refresh)
+      logger.info "Refreshing Gem list"
+      Gem.refresh
+    end
+
+    load_app.call
   end
-
-
-
-
-
-
-
 
   def proc_name(tag)
     $0 = "qilin_#{tag}"

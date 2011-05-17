@@ -9,6 +9,10 @@ if GC.respond_to?(:copy_on_write_friendly=)
   GC.copy_on_write_friendly = true
 end
 
+load_app do
+  puts "WOOO"
+end
+
 before_fork do |parent, worker|
   # the following is highly recomended for Rails + "preload_app true"
   # as there's no need for the master process to hold a connection

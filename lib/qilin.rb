@@ -1,4 +1,7 @@
 module Qilin
+  def self.run(options = {})
+    Qilin::Manager.new(options).start.join
+  end
 end
 
 require 'fcntl'
