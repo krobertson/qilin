@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
 
   s.executables   = %w(qilin)
 
-  s.files         = %w( Rakefile LICENSE )
+  s.files         = %w( Rakefile README.md LICENSE )
   s.files         += Dir.glob("lib/**/*")
   s.files         += Dir.glob("bin/**/*")
   s.require_paths = ["lib"]
