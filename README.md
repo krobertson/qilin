@@ -3,9 +3,13 @@ Qilin
 
 Qilin applies the principles used in [Unicorn](http://unicorn.bogomips.org/) but for background processing.  Unicorn is an excellent application server and robust with self managing its worker processes.  It supports lightweight forking, quickly respawning worker processes that die, and reaping processes that exceed a processing timeout.  The same attributes can be highly desirable with a high throughput tier.
 
+Qilin is not a framework for background processing like [Resque](https://github.com/defunkt/resque) or [Delayed::Job](https://github.com/tobi/delayed_job/). Instead, it is meant to be more like a background processing container which leverages another framework for handling the queuing.  Eventually, the goal is for Qilin to work with Resque, Delayed::Job, and others.
+
 Qilin is currently being groomed for production use at [Involver](http://involver.com/), where we perform several million background tasks per day and need a very resilient framework for managing our worker tier.
 
 Qilin borrows heavily from Unicorn itself to lend itself a very similar configuration DSL and similar process and signal handling.  As such, it is released under GPL v2.
+
+The name comes from the [mythical Chinese creature](http://en.wikipedia.org/wiki/Qilin) which is often referred to as the "Chinese unicorn".
 
 Overview
 --------
