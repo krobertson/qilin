@@ -1,20 +1,20 @@
 Qilin
 =====
 
-Qilin applies the principles used in [Unicorn](http://unicorn.bogomips.org/) but for background processing.  Unicorn is an excellent application server and robust with self managing its worker threads.  It supports lightweight forking, quickly respawning worker threads that die, and reaping threads that exceed a processing timeout.  The same attributes can be highly desirable with a high throughput tier.
+Qilin applies the principles used in [Unicorn](http://unicorn.bogomips.org/) but for background processing.  Unicorn is an excellent application server and robust with self managing its worker processes.  It supports lightweight forking, quickly respawning worker processes that die, and reaping processes that exceed a processing timeout.  The same attributes can be highly desirable with a high throughput tier.
 
 Qilin is currently being groomed for production use at [Involver](http://involver.com/), where we perform several million background tasks per day and need a very resilient framework for managing our worker tier.
 
-Qilin borrows heavily from Unicorn itself to lend itself a very similar configuration DSL and similar thread and signal handling.  As such, it is released under GPL v2.
+Qilin borrows heavily from Unicorn itself to lend itself a very similar configuration DSL and similar process and signal handling.  As such, it is released under GPL v2.
 
 Overview
 --------
 
-Qilin focuses on a threading model where a single master thread is responsible for retrieving jobs to be processed and managing all of the worker threads.  It is referred to as the manager thread.  If a worker thread exits, it will respawn it.  If a worker exceeds its timeout processing a job, it will kill it and spawn another.
+Qilin focuses on a processing model where a single master process is responsible for retrieving jobs to be processed and managing all of the worker processes.  It is referred to as the manager process.  If a worker process exits, it will respawn it.  If a worker exceeds its timeout processing a job, it will kill it and spawn another.
 
-The way the manager thread pulls a job for processing is defined using in a block and it is expected to return a string payload (object support coming soon) or nil if no job is available.  Requests to pull jobs are not expected to be blocking.  It should only check if one is available or return if not.
+The way the manager process pulls a job for processing is defined using in a block and it is expected to return a string payload (object support coming soon) or nil if no job is available.  Requests to pull jobs are not expected to be blocking.  It should only check if one is available or return if not.
 
-The worker threads focus on processing the payload from the manager.  A timeout is defined in the configuration with is intended to be a maximum time threshold a given job should take.  If it exceeds the timeout, it will kill the thread and spawn another.  The payload is no re-attempted.  Soon, a hook will be provided so you can do reporting or accounting of timed out payloads.
+The worker processes focus on processing the payload from the manager.  A timeout is defined in the configuration with is intended to be a maximum time threshold a given job should take.  If it exceeds the timeout, it will kill the process and spawn another.  The payload is no re-attempted.  Soon, a hook will be provided so you can do reporting or accounting of timed out payloads.
 
 Configuration
 -------------
@@ -87,17 +87,17 @@ Common options:
 Signals
 -------
 
-The Qilin manager thread responds the the following signals:
+The Qilin manager process responds the the following signals:
 
 * `QUIT` - Graceful shutdown.  Wait for workers to finish processing and shutdown.
 * `TERM` / `INT` - Immediately shutdown.  Kills all workers and exits.
 * `HUP` - Reloads the configuration file and applies it.
 * `USR1` - Rotate logs.
 * `WINCH` - Gracefully kills all workers and doesn't respawn them.
-* `TTIN` - Spawns an additional worker threads.
+* `TTIN` - Spawns an additional worker processes.
 * `TTOU` - Reduces the worker count by one and gracefully kills an existing worker.
 
-The Qilin worker threads respond to the following signals:
+The Qilin worker processes respond to the following signals:
 
 * `QUIT` - Gracefully shuts down after processing the current job.
 * `TERM` / `INT` - Immediately shuts down.
