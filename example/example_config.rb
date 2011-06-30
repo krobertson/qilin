@@ -36,14 +36,14 @@ end
 
 # The "job" is just a timestamp it'll puts
 pull_job do |parent|
-  Time.now.to_s
+  Time.now
 end
 
 # Print the timestamp, then sleep a random amount of time from 1-10 seconds.
 # Note the timeout is 8 seconds, just to demostrate how it'll reap workers
 process_job do |worker,job_payload|
   time = (rand*10).to_i
-  puts "worker#{worker.nr}: #{job_payload} - sleeping #{time}"
+  puts "worker#{worker.nr}: #{job_payload} (#{job_payload.class}) - sleeping #{time}"
   sleep time
   true
 end

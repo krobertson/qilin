@@ -172,7 +172,7 @@ class Qilin::Manager
       ready_child = CHILD_PIPES[rd]
       return false unless ready_child
 
-      job = pull_job.call(self)
+      job = Marshal.dump(pull_job.call(self))
       ready_child.puts(job) if job
     rescue Exception => e
       logger.error "Unhandled master poll exception: #{e.inspect}"
@@ -307,7 +307,7 @@ class Qilin::Manager
       alive.chmod(m = 0 == m ? 1 : 0)
 
       # process the job payload
-      process_job.call(worker, job_payload)
+      process_job.call(worker, Marshal.load(job_payload))
 
       # make the following bet: if we accepted clients this round,
       # we're probably reasonably busy, so avoid calling select()
